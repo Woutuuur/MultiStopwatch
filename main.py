@@ -5,7 +5,7 @@ from threading import Timer
 import pickle
 from PIL import ImageTk as itk
 from datetime import datetime
-import pyperclip
+import html2clipboard as h2c
 
 AMOUNT_OF_TIMERS = 5
 BUTTON_WIDTH = 10
@@ -54,8 +54,8 @@ class timer:
 			self.end = end
 			self.customer = customer
 		
-		def toString(self):
-			return f'{self.getDateString()} | {self.getStartString()} | {self.getEndString()} | {self.getTimeDeltaString()}'
+		def toHTMLRow(self):
+			return f'<tr><td>{self.getDateString()}</td><td>{self.getStartString()}</td><td>{self.getEndString()}</td><td>{self.getTimeDeltaString()}</td></tr>'
 
 		def getStartString(self):
 			return str(self.start).split('.', 2)[0].split(' ')[1]
@@ -81,59 +81,89 @@ class timer:
 		self.view_logs()
 
 	def view_logs(self):
-		self.newWindow = Toplevel(root)
-		self.newWindow.resizable(False, False)
-		self.newWindow.title(f"Timer {self.i+1} logs")
-		self.newWindow.minsize(250, 50)
+		newWindow = Toplevel(root)
+		newWindow.resizable(False, False)
+		newWindow.title(f"Timer {self.i+1} logs")
+		newWindow.minsize(250, 50)
 		#self.newWindow.attributes("-toolwindow",1)
-		self.newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
+		newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
 		if len(self.timeframes) > 0:
-			b = Label(self.newWindow, text="Customer")
+			b = Label(newWindow, text="Customer")
 			b.grid(row = 0, column = 0, sticky=W)
-			b = Label(self.newWindow, text="Date")
+			b = Label(newWindow, text="Date")
 			b.grid(row=0, column=1, sticky=W)
-			b = Label(self.newWindow, text="Start")
+			b = Label(newWindow, text="Start")
 			b.grid(row = 0, column = 2, sticky=W)
-			b = Label(self.newWindow, text="End")
+			b = Label(newWindow, text="End")
 			b.grid(row = 0, column = 3, sticky=W)
-			b = Label(self.newWindow, text="Duration")
+			b = Label(newWindow, text="Duration")
 			b.grid(row = 0, column = 4, sticky=W)
-			b = Label(self.newWindow, text="Minutes")
+			b = Label(newWindow, text="Minutes")
 			b.grid(row = 0, column = 5, sticky=W)
 			for i in range(1, len(self.timeframes) + 1):
-				b = Label(self.newWindow, text=self.timeframes[i-1].customer)
+				b = Label(newWindow, text=self.timeframes[i-1].customer)
 				b.grid(row=i, column=0, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getDateString())
+				b = Label(newWindow, text=self.timeframes[i-1].getDateString())
 				b.grid(row=i, column=1, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getStartString())
+				b = Label(newWindow, text=self.timeframes[i-1].getStartString())
 				b.grid(row=i, column=2, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getEndString())
+				b = Label(newWindow, text=self.timeframes[i-1].getEndString())
 				b.grid(row=i, column=3, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getTimeDeltaString())
+				b = Label(newWindow, text=self.timeframes[i-1].getTimeDeltaString())
 				b.grid(row=i, column=4, sticky=W)
-				b = Label(self.newWindow, text=round(float(self.timeframes[i-1].getTimeDeltaInMinutes())))
+				b = Label(newWindow, text=round(float(self.timeframes[i-1].getTimeDeltaInMinutes())))
 				b.grid(row=i, column=5, sticky=W)
-				ttk.Separator(self.newWindow, orient=HORIZONTAL).grid(column=0, row=i-1, columnspan=6, sticky ='wes')
+				ttk.Separator(newWindow, orient=HORIZONTAL).grid(column=0, row=i-1, columnspan=6, sticky ='wes')
 			for i in range(5):
-				ttk.Separator(self.newWindow, orient=VERTICAL).grid(column=i+1, row=0, rowspan=len(self.timeframes) + 1, sticky='nsw')
-			clear_logs_button = Button(self.newWindow, text="Remove all logs", command=self.remove_all_logs)
+				ttk.Separator(newWindow, orient=VERTICAL).grid(column=i+1, row=0, rowspan=len(self.timeframes) + 1, sticky='nsw')
+			clear_logs_button = Button(newWindow, text="Remove all logs", command=self.remove_all_logs)
 			clear_logs_button.grid(row=len(self.timeframes)+2, column=3, columnspan=2)
-			copy_button = Button(self.newWindow, text="Copy to clipboard", command=self.copy_logs_to_clipboard)
+			copy_button = Button(newWindow, text="Copy to clipboard", command=lambda: self.copy_logs_to_clipboard(newWindow))
 			copy_button.grid(row=len(self.timeframes)+2, column=1, columnspan=2)
 		else:
 			b = Label(self.newWindow, text="Log is empty.")
 			b.pack()
-		
-	def copy_logs_to_clipboard(self):
-		text = ""
-		text += " Datum      | Start    | Einde    | Duratie \n"
-		text += "-" * 12 + "+" + "-" * 10 + "+" + "-" * 10 + "+" + "-" * 9 + "\n"
+	
+	def timeframes_to_table(self, timeframes):
+		text = '''<body><table cellspacing="0" border="1">'''
+		text += "<tr><th>Datum</th><th>Start</th><th>Einde</th><th>Duratie</th></tr>"
 		total = 0
-		for item in self.timeframes:
-			text +=  " " + item.toString() + "\n"
+		for item in timeframes:
+			text  += item.toHTMLRow()
 			total += item.getTimeDelta().total_seconds()
-		text += "\n" + " " * 25 + "Totaal:    " + convert_time(total)
-		pyperclip.copy(text)
+		text += f'''<tr><td colspan="3"><b>Totaal</b><td>{convert_time(total)}</td></tr>'''
+		text += "</table></body>"
+		text += "<style>table, th, td{ padding: 10px; border: 1px solid black; border-collapse: collapse; }</style>"
+		return text
+
+	def copy_logs_to_clipboard(self, logs_window):
+		def handle_single_customer(customer, window):
+			h2c.PutHtml(self.timeframes_to_table(timeframesByCustomer[customer]))
+			window.destroy()
+			
+		if len(self.timeframes) == 0: h2c.PutHtml(""); return
+		timeframesByCustomer = {}
+		for timeframe in self.timeframes:
+			if timeframe.customer in timeframesByCustomer:
+				timeframesByCustomer[timeframe.customer].append(timeframe)
+			else:
+				timeframesByCustomer[timeframe.customer] = [timeframe]
+
+		text = ""
+		customers = list(timeframesByCustomer.keys())
+		if len(timeframesByCustomer) == 1: 
+			text = self.timeframes_to_table(self.timeframes)
+			h2c.PutHtml(text)
+		else:
+			newWindow = Toplevel(logs_window)
+			newWindow.resizable(False, False)
+			newWindow.title("Which customer?")
+			newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
+			for i, customer in enumerate(customers):
+				b = Button(newWindow, text=customer, command=lambda c = customer: handle_single_customer(c, newWindow), width=40)
+				b.grid(row=i, column=0, columnspan=10)
+
+		
 
 	def update_grid(self):
 		self.view_log_button.grid(row = self.i, column = 6)
@@ -167,8 +197,8 @@ class timer:
 		remove_timer(self.i)
 
 	def update_timer(self):
-		self.time_text['text'] = convert_time(self.current_time)
 		self.current_time += 1
+		self.time_text['text'] = convert_time(self.current_time)
 		update_total_time()
 
 	def start_timer(self):
@@ -260,7 +290,6 @@ def update_grid():
 	add_timer_button.grid(row = AMOUNT_OF_TIMERS+1, column = 0)
 	total_time_label.grid(row = AMOUNT_OF_TIMERS + 1, column = 4)
 
-
 add_timer_button = Button(root, text="Add", takefocus = 0, command=add_timer, width = BUTTON_WIDTH)
 start_all_button = Button(root, text="Start all", takefocus = 0, command=start_all, width = BUTTON_WIDTH)
 stop_all_button = Button(root, text="Pause all", takefocus = 0, command=stop_all, width = BUTTON_WIDTH)
@@ -270,7 +299,6 @@ remove_all_button = Button(root, text="Remove all", takefocus=0, command=remove_
 total_time_label = Label(root, text="0:00:00", takefocus=0, width = BUTTON_WIDTH)
 
 update_grid()
-
 
 def on_closing():
 	with open(os.path.join(FULL_PATH, "data.dat"), "wb") as f:
