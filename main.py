@@ -96,62 +96,61 @@ class timer:
 		self.newWindow.destroy()
 		self.view_logs()
 
+	def toggle_all_checkboxes(self):
+		for checkbox in self.checkboxes:
+			if self.main_checkbox_value.get():
+				checkbox.select()
+			else:
+				checkbox.deselect()
+
+	def set_correct_value_main_checkbox(self):
+		self.main_checkbox_value.set(all([x.get() for x in self.checkbox_values]))
+
 	def view_logs(self):
 		self.newWindow = Toplevel(root)
 		self.newWindow.resizable(False, False)
 		self.newWindow.title(f"Timer {self.i+1} logs")
 		self.newWindow.minsize(250, 50)
 		self.checkbox_values = []
-		#self.newWindow.attributes("-toolwindow",1)
+		self.checkboxes = []
 		self.newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
 		if len(self.timeframes) > 0:
-			b = Label(self.newWindow, text="Customer")
-			b.grid(row = 0, column = 1, sticky=W)
-			b = Label(self.newWindow, text="Date")
-			b.grid(row=0, column=2, sticky=W)
-			b = Label(self.newWindow, text="Start")
-			b.grid(row = 0, column = 3, sticky=W)
-			b = Label(self.newWindow, text="End")
-			b.grid(row = 0, column = 4, sticky=W)
-			b = Label(self.newWindow, text="Duration")
-			b.grid(row = 0, column = 5, sticky=W)
-			b = Label(self.newWindow, text="Minutes")
-			b.grid(row = 0, column = 6, sticky=W)
+			self.main_checkbox_value = IntVar(value=1)
+			Checkbutton(self.newWindow, variable=self.main_checkbox_value, command=self.toggle_all_checkboxes).grid(row=0, column=0, sticky="nsew")
+			Label(self.newWindow, text="Customer").grid(row = 0, column = 1, sticky=W)
+			Label(self.newWindow, text="Date").grid(row=0, column=2, sticky=W)
+			Label(self.newWindow, text="Start").grid(row = 0, column = 3, sticky=W)
+			Label(self.newWindow, text="End").grid(row = 0, column = 4, sticky=W)
+			Label(self.newWindow, text="Duration").grid(row = 0, column = 5, sticky=W)
+			Label(self.newWindow, text="Minutes").grid(row = 0, column = 6, sticky=W)
 			for i in range(1, len(self.timeframes) + 1):
-				checkbox_value = IntVar()
-				b = Checkbutton(self.newWindow, variable=checkbox_value)
-				b.grid(row=i, column=0, sticky="nsew")
+				checkbox_value = IntVar(value=1)
+				checkbox = Checkbutton(self.newWindow, variable=checkbox_value, command=self.set_correct_value_main_checkbox)
+				checkbox.grid(row=i, column=0, sticky="nsew")
+				self.checkboxes.append(checkbox)
 				self.checkbox_values.append(checkbox_value)
-				b = Label(self.newWindow, text=self.timeframes[i-1].customer)
-				b.grid(row=i, column=1, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getDateString())
-				b.grid(row=i, column=2, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getStartString())
-				b.grid(row=i, column=3, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getEndString())
-				b.grid(row=i, column=4, sticky=W)
-				b = Label(self.newWindow, text=self.timeframes[i-1].getTimeDeltaString())
-				b.grid(row=i, column=5, sticky=W)
-				b = Label(self.newWindow, text=round(self.timeframes[i-1].getTimeDeltaInMinutes()))
-				b.grid(row=i, column=6, sticky=W)
+				Label(self.newWindow, text=self.timeframes[i-1].customer).grid(row=i, column=1, sticky=W)
+				Label(self.newWindow, text=self.timeframes[i-1].getDateString()).grid(row=i, column=2, sticky=W)
+				Label(self.newWindow, text=self.timeframes[i-1].getStartString()).grid(row=i, column=3, sticky=W)
+				Label(self.newWindow, text=self.timeframes[i-1].getEndString()).grid(row=i, column=4, sticky=W)
+				Label(self.newWindow, text=self.timeframes[i-1].getTimeDeltaString()).grid(row=i, column=5, sticky=W)
+				Label(self.newWindow, text=round(self.timeframes[i-1].getTimeDeltaInMinutes())).grid(row=i, column=6, sticky=W)
 				ttk.Separator(self.newWindow, orient=HORIZONTAL).grid(column=0, row=i-1, columnspan=7, sticky ='wes')
 			for i in range(6):
 				ttk.Separator(self.newWindow, orient=VERTICAL).grid(column=i+1, row=0, rowspan=len(self.timeframes) + 1, sticky='nsw')
-			b = Button(self.newWindow, text="To Outlook", command=self.open_in_outlook)
-			b.grid(row=len(self.timeframes)+2, column=0, columnspan=1, sticky=W)
+			Button(self.newWindow, text="To Outlook", command=self.open_in_outlook).grid(row=len(self.timeframes)+2, column=0, columnspan=1, sticky=W)
 			copy_button = Button(self.newWindow, text="Copy all to clipboard", command=lambda: self.copy_logs_to_clipboard(self.newWindow))
 			copy_button.grid(row=len(self.timeframes)+2, column=2, columnspan=2)
 			clear_logs_button = Button(self.newWindow, text="Remove all logs", command=self.remove_all_logs)
 			clear_logs_button.grid(row=len(self.timeframes)+2, column=4, columnspan=2)
-
+			self.set_correct_value_main_checkbox()
 		else:
-			b = Label(self.newWindow, text="Log is empty.")
-			b.pack()
+			self.newWindow.columnconfigure(0, weight=1)
+			self.newWindow.rowconfigure(0, weight=1)
+			Label(self.newWindow, text="Log is empty.", font=("", 12)).grid(row=0, column=0)
 	
 	def to_ics_timeformat(self, time):
-		t = str(time.isoformat())
-		t = t.replace('-', '').replace(':', '').split('.')[0]
-		return t
+		return str(time.isoformat()).replace('-', '').replace(':', '').split('.')[0]
 
 	def open_in_outlook(self):
 		timeframes = [timeframe for i, timeframe in enumerate(self.timeframes) if self.checkbox_values[i].get()]
