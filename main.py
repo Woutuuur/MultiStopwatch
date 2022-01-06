@@ -4,8 +4,10 @@ import os
 from threading import Timer
 import pickle
 from PIL import ImageTk as itk
-from datetime import datetime
+from datetime import datetime, timedelta
 import html2clipboard as h2c
+import copy
+from functools import partial
 
 AMOUNT_OF_TIMERS = 5
 BUTTON_WIDTH = 10
@@ -13,10 +15,24 @@ DOC_PATH = os.path.join(os.path.expanduser('~'), "Documents")
 FOLDER_NAME = "MultiStopWatch"
 FULL_PATH = os.path.join(DOC_PATH, FOLDER_NAME)
 
+ics_base = ''' 
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//woutervandenbroeke//MultiStopWatch 1.4//EN
+BEGIN:VEVENT
+UID:MultiStopWatch-1.4
+TZID:Europe/Amsterdam
+DTSTAMP:*DTSTAMP*
+DTSTART:*DTSTART*
+DTEND:*DTEND*
+SUMMARY:*TITLE*
+END:VEVENT
+END:VCALENDAR
+'''
+
 root = Tk()
 if not os.path.exists(FULL_PATH):
 	os.makedirs(FULL_PATH)
-
 
 def convert_time(seconds):
 	seconds = seconds % (24 * 3600)
@@ -73,7 +89,7 @@ class timer:
 			return str(self.start).split('.', 2)[0].split(' ')[0]
 
 		def getTimeDeltaInMinutes(self):
-			return str(self.getTimeDelta().seconds / 60)
+			return float(self.getTimeDelta().seconds / 60)
 
 	def remove_all_logs(self):
 		self.timeframes.clear()
@@ -81,49 +97,82 @@ class timer:
 		self.view_logs()
 
 	def view_logs(self):
-		newWindow = Toplevel(root)
-		newWindow.resizable(False, False)
-		newWindow.title(f"Timer {self.i+1} logs")
-		newWindow.minsize(250, 50)
+		self.newWindow = Toplevel(root)
+		self.newWindow.resizable(False, False)
+		self.newWindow.title(f"Timer {self.i+1} logs")
+		self.newWindow.minsize(250, 50)
+		self.checkbox_values = []
 		#self.newWindow.attributes("-toolwindow",1)
-		newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
+		self.newWindow.geometry(f"+{root.geometry().split('+', 1)[1]}")
 		if len(self.timeframes) > 0:
-			b = Label(newWindow, text="Customer")
-			b.grid(row = 0, column = 0, sticky=W)
-			b = Label(newWindow, text="Date")
-			b.grid(row=0, column=1, sticky=W)
-			b = Label(newWindow, text="Start")
-			b.grid(row = 0, column = 2, sticky=W)
-			b = Label(newWindow, text="End")
+			b = Label(self.newWindow, text="Customer")
+			b.grid(row = 0, column = 1, sticky=W)
+			b = Label(self.newWindow, text="Date")
+			b.grid(row=0, column=2, sticky=W)
+			b = Label(self.newWindow, text="Start")
 			b.grid(row = 0, column = 3, sticky=W)
-			b = Label(newWindow, text="Duration")
+			b = Label(self.newWindow, text="End")
 			b.grid(row = 0, column = 4, sticky=W)
-			b = Label(newWindow, text="Minutes")
+			b = Label(self.newWindow, text="Duration")
 			b.grid(row = 0, column = 5, sticky=W)
+			b = Label(self.newWindow, text="Minutes")
+			b.grid(row = 0, column = 6, sticky=W)
 			for i in range(1, len(self.timeframes) + 1):
-				b = Label(newWindow, text=self.timeframes[i-1].customer)
-				b.grid(row=i, column=0, sticky=W)
-				b = Label(newWindow, text=self.timeframes[i-1].getDateString())
+				checkbox_value = IntVar()
+				b = Checkbutton(self.newWindow, variable=checkbox_value)
+				b.grid(row=i, column=0, sticky="nsew")
+				self.checkbox_values.append(checkbox_value)
+				b = Label(self.newWindow, text=self.timeframes[i-1].customer)
 				b.grid(row=i, column=1, sticky=W)
-				b = Label(newWindow, text=self.timeframes[i-1].getStartString())
+				b = Label(self.newWindow, text=self.timeframes[i-1].getDateString())
 				b.grid(row=i, column=2, sticky=W)
-				b = Label(newWindow, text=self.timeframes[i-1].getEndString())
+				b = Label(self.newWindow, text=self.timeframes[i-1].getStartString())
 				b.grid(row=i, column=3, sticky=W)
-				b = Label(newWindow, text=self.timeframes[i-1].getTimeDeltaString())
+				b = Label(self.newWindow, text=self.timeframes[i-1].getEndString())
 				b.grid(row=i, column=4, sticky=W)
-				b = Label(newWindow, text=round(float(self.timeframes[i-1].getTimeDeltaInMinutes())))
+				b = Label(self.newWindow, text=self.timeframes[i-1].getTimeDeltaString())
 				b.grid(row=i, column=5, sticky=W)
-				ttk.Separator(newWindow, orient=HORIZONTAL).grid(column=0, row=i-1, columnspan=6, sticky ='wes')
-			for i in range(5):
-				ttk.Separator(newWindow, orient=VERTICAL).grid(column=i+1, row=0, rowspan=len(self.timeframes) + 1, sticky='nsw')
-			clear_logs_button = Button(newWindow, text="Remove all logs", command=self.remove_all_logs)
-			clear_logs_button.grid(row=len(self.timeframes)+2, column=3, columnspan=2)
-			copy_button = Button(newWindow, text="Copy to clipboard", command=lambda: self.copy_logs_to_clipboard(newWindow))
-			copy_button.grid(row=len(self.timeframes)+2, column=1, columnspan=2)
+				b = Label(self.newWindow, text=round(self.timeframes[i-1].getTimeDeltaInMinutes()))
+				b.grid(row=i, column=6, sticky=W)
+				ttk.Separator(self.newWindow, orient=HORIZONTAL).grid(column=0, row=i-1, columnspan=7, sticky ='wes')
+			for i in range(6):
+				ttk.Separator(self.newWindow, orient=VERTICAL).grid(column=i+1, row=0, rowspan=len(self.timeframes) + 1, sticky='nsw')
+			b = Button(self.newWindow, text="To Outlook", command=self.open_in_outlook)
+			b.grid(row=len(self.timeframes)+2, column=0, columnspan=1, sticky=W)
+			copy_button = Button(self.newWindow, text="Copy all to clipboard", command=lambda: self.copy_logs_to_clipboard(self.newWindow))
+			copy_button.grid(row=len(self.timeframes)+2, column=2, columnspan=2)
+			clear_logs_button = Button(self.newWindow, text="Remove all logs", command=self.remove_all_logs)
+			clear_logs_button.grid(row=len(self.timeframes)+2, column=4, columnspan=2)
+
 		else:
 			b = Label(self.newWindow, text="Log is empty.")
 			b.pack()
 	
+	def to_ics_timeformat(self, time):
+		t = str(time.isoformat())
+		t = t.replace('-', '').replace(':', '').split('.')[0]
+		return t
+
+	def open_in_outlook(self):
+		timeframes = [timeframe for i, timeframe in enumerate(self.timeframes) if self.checkbox_values[i].get()]
+		mins = 0
+		dtstamp = self.to_ics_timeformat(datetime.now())
+		dtstart = self.to_ics_timeformat(min([x.start for x in timeframes]))
+		dtend = self.to_ics_timeformat(max([x.end for x in timeframes]))
+		mins = int(round(sum([x.getTimeDeltaInMinutes() for x in timeframes])))
+		customer = timeframes[0].customer
+		hrs = mins // 60
+		time_s = str(mins)
+		if (hrs > 0):
+			mins %= 60
+			time_s = f"{hrs}:{mins:02}"
+		filename = FULL_PATH + "/_tmp.ics"
+		title = f"{time_s} - {customer}"
+		s = ics_base.replace("*DTSTAMP*", dtstamp).replace("*DTSTART*", dtstart).replace("*DTEND*", dtend).replace("*TITLE*", title)
+		with open(filename, "w") as f:
+			f.write(s)
+		os.startfile(filename)
+
 	def timeframes_to_table(self, timeframes):
 		text = '''<body><table cellspacing="0" border="1">'''
 		text += "<tr><th>Datum</th><th>Start</th><th>Einde</th><th>Duratie</th></tr>"
@@ -163,8 +212,6 @@ class timer:
 				b = Button(newWindow, text=customer, command=lambda c = customer: handle_single_customer(c, newWindow), width=40)
 				b.grid(row=i, column=0, columnspan=10)
 
-		
-
 	def update_grid(self):
 		self.view_log_button.grid(row = self.i, column = 6)
 		self.reset_button.grid(row = self.i, column = 3)
@@ -202,14 +249,17 @@ class timer:
 		update_total_time()
 
 	def start_timer(self):
+		self.time_text['bg'] = '#e89595'
 		if not self.timerThread.is_alive():
 			self.begin_time = datetime.now()
 			self.timerThread = RepeatTimer(1, self.update_timer)
 			self.timerThread.start()
 
 	def stop_timer(self):
+		self.time_text['bg'] = '#f0f0f0'
 		if self.timerThread.is_alive():
 			new_timeframe = self.timeframe(self.begin_time, datetime.now(), self.note.get())
+			# new_timeframe = self.timeframe(self.begin_time - timedelta(hours=1, minutes=30), datetime.now(), self.note.get())
 			self.timeframes.append(new_timeframe)
 			self.timerThread.cancel()
 
@@ -218,6 +268,7 @@ class timer:
 		self.log('reset')
 		self.current_time = 0
 		self.time_text['text'] = "0:00:00"
+		update_total_time()
 
 if os.path.isfile(os.path.join(FULL_PATH, "data.dat")):
 	with open(os.path.join(FULL_PATH, "data.dat"), "rb") as f:
@@ -249,6 +300,7 @@ def remove_timer(i):
 	timers.pop(i)
 	AMOUNT_OF_TIMERS -= 1
 	reindex_timers()
+	update_total_time()
 
 def stop_all():
 	for timer in timers:
@@ -257,6 +309,7 @@ def stop_all():
 def reset_all():
 	for timer in timers:
 		timer.reset_timer()
+	update_total_time()
 
 def clear_all():
 	for timer in timers:
@@ -273,6 +326,7 @@ def remove_all():
 		timer.destroy()
 	AMOUNT_OF_TIMERS = 0
 	timers.clear()
+	update_total_time()
 
 def add_timer():
 	global AMOUNT_OF_TIMERS
