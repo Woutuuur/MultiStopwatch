@@ -1,7 +1,7 @@
 from tkinter import *
 import threading
 from gui.timer_entry import TimerEntry
-from datetime import datetime
+from datetime import datetime, timedelta
 from gui.log_view import LogView
 import application
 from util.time_util import convert_time
@@ -60,9 +60,9 @@ class Timer:
 
     def stop_timer(self):
         self.timer_entry.time_text['bg'] = '#f0f0f0'
+        self.current_time += 90
         if self.timerThread.is_alive():
             new_timeframe = timeframe.Timeframe(self.begin_time, datetime.now(), self.timer_entry.note.get())
-            # new_timeframe = self.timeframe(self.begin_time - timedelta(hours=1, minutes=30), datetime.now(), self.note.get())
             self.timeframes.append(new_timeframe)
             self.timerThread.cancel()
 
