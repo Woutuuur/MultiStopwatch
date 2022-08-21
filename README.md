@@ -16,3 +16,7 @@ To start the application:
 ```
 python msw.py
 ```
+
+## Screenshots
+![](resources/examples/main-window.png)
+![](resources/examples/logs-window.png)
