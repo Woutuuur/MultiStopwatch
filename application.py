@@ -1,8 +1,8 @@
 import os
 import pickle
-from GUI.gui_manager import GUIManager
+from gui.gui_manager import GUIManager
 from timer import Timer
-from time_util import convert_time
+from util.time_util import convert_time
 from datetime import datetime
 from config import *
 

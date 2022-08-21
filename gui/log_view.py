@@ -1,5 +1,5 @@
 from tkinter import *
-from GUI.gui_manager import *
+from gui.gui_manager import *
 from logs import LogManager
 
 class LogView():

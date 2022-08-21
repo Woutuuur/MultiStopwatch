@@ -1,5 +1,5 @@
 from tkinter import *
-from GUI.gui_manager import GUIManager
+from gui.gui_manager import GUIManager
 
 class TimerEntry():
     def __init__(self, timer):

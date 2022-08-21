@@ -1,10 +1,10 @@
 from tkinter import *
 import threading
-from GUI.timer_entry import TimerEntry
+from gui.timer_entry import TimerEntry
 from datetime import datetime
-from GUI.log_view import LogView
+from gui.log_view import LogView
 import application
-from time_util import convert_time
+from util.time_util import convert_time
 import timeframe
 
 class RepeatTimer(threading.Timer):

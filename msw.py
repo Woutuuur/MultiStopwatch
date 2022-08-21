@@ -1,4 +1,4 @@
-from GUI.gui_manager import GUIManager
+from gui.gui_manager import GUIManager
 from application import instance as app
 
 def main():

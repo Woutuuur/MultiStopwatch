@@ -1,5 +1,3 @@
-from msilib.schema import CheckBox
-from tabnanny import check
 from tkinter import *
 from tkinter import ttk as ttk
 

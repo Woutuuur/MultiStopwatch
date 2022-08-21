@@ -1,8 +1,8 @@
 from datetime import datetime
 import os
-import html2clipboard as h2c
+import util.html2clipboard as h2c
 from config import *
-from time_util import convert_time
+from util.time_util import convert_time
 from timeframe import Timeframe
 
 ics_base = ''' 
