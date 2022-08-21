@@ -5,7 +5,6 @@ from timer import Timer
 from time_util import convert_time
 from datetime import datetime
 from config import *
-import GUI.timer_entry as te
 
 class App():
     def __init__(self):
@@ -75,7 +74,7 @@ class App():
             os.makedirs(FULL_PATH)
 
     def update_total_time(self):
-        self.total_time_label['text'] = convert_time(sum(t.current_time for t in self.timers))
+        self.total_time_label['text'] = convert_time(sum(map(lambda t: t.current_time, self.timers)))
 
     def remove_timer(self, i):
         global AMOUNT_OF_TIMERS
