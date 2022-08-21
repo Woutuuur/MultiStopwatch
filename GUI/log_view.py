@@ -63,7 +63,8 @@ class LogView():
     def remove_all_logs(self):
         self.timer.clear_timeframes()
         self.window.destroy()
-        self.view_logs()
+        self.window = self.__create_window("Log cleared", root)
+        self.display()
 
     def __create_window(self, title, window):
         window = Toplevel(window)

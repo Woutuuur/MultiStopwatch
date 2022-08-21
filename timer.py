@@ -30,7 +30,6 @@ class Timer:
         log_view = LogView(f"Timer {self.row + 1} logs", self)
         log_view.display()
 
-
     def log(self, context):
         if self.current_time > 0:
             if len(self.timer_entry.note.get()) > 0:

@@ -37,7 +37,6 @@ class App():
                 self.timers[i].timer_entry.time_text['text'] = convert_time(current_time)
                 self.timers[i].current_time = current_time
                 self.timers[i].timeframes = timeframes
-        # self.__reindex_timers()
     
     def __write_to_data_file(self):
         with open(os.path.join(FULL_PATH, DATA_FILENAME), "wb") as f:
