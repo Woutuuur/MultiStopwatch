@@ -8,9 +8,9 @@ from timeframe import Timeframe
 ics_base = ''' 
 BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//woutervandenbroeke//MultiStopWatch 1.4//EN
+PRODID:-//woutuuur//MultiStopwatch//EN
 BEGIN:VEVENT
-UID:MultiStopWatch-1.4
+UID:MultiStopwatch
 TZID:Europe/Amsterdam
 DTSTAMP:*DTSTAMP*
 DTSTART:*DTSTART*
