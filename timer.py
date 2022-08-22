@@ -30,12 +30,17 @@ class Timer:
         log_view = LogView(f"Timer {self.row + 1} logs", self)
         log_view.display()
 
+    def get_current_time(self):
+        return self.current_time
+
     def log(self, context):
         if self.current_time > 0:
             if len(self.timer_entry.note.get()) > 0:
-                application.instance.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')} stopwatch {self.row + 1} with label '{self.timer_entry.note.get()}' {context} at {self.timer_entry.time_text['text']}\n")
+                application.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')} stopwatch {self.row + 1} with label '{self.timer_entry.note.get()}' {context} at {self.timer_entry.time_text['text']}\n")
             else:
-                application.instance.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')} stopwatch {self.row + 1} {context} at {self.timer_entry.time_text['text']}\n")
+                application.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}"
+                                      f" stopwatch {self.row + 1} {context}"
+                                      f" at {self.timer_entry.time_text['text']}\n")
 
     def destroy(self):
         self.stop_timer()
@@ -60,7 +65,6 @@ class Timer:
 
     def stop_timer(self):
         self.timer_entry.time_text['bg'] = '#f0f0f0'
-        self.current_time += 90
         if self.timerThread.is_alive():
             new_timeframe = timeframe.Timeframe(self.begin_time, datetime.now(), self.timer_entry.note.get())
             self.timeframes.append(new_timeframe)

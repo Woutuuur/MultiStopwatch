@@ -1,5 +1,6 @@
-from gui.gui_manager import GUIManager
+import gui.gui_manager as GUIManager
 from application import instance as app
+
 
 def main():
 	GUIManager.init_gui()
@@ -7,6 +8,7 @@ def main():
 	app.update_grid()
 	app.update_total_time()
 	GUIManager.start_gui()
+
 
 if __name__ == "__main__":
 	main()

@@ -1,5 +1,8 @@
+import datetime
+
+
 class Timeframe:
-    def __init__(self, start, end, customer):
+    def __init__(self, start: datetime.datetime, end: datetime.datetime, customer):
         self.start = start
         self.end = end
         self.customer = customer
@@ -24,11 +27,6 @@ class Timeframe:
 
     def getTimeDeltaInMinutes(self):
         return float(self.getTimeDelta().seconds / 60)
-        
-    def convert_time(seconds):
-        seconds = seconds % (24 * 3600)
-        hour = seconds // 3600
-        seconds %= 3600
-        minutes = seconds // 60
-        seconds %= 60
-        return "%d:%02d:%02d" % (hour, minutes, seconds)
+
+    def getTimeDeltaInSeconds(self):
+        return self.getTimeDelta().total_seconds()
