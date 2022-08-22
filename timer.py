@@ -1,16 +1,17 @@
-from tkinter import *
-import threading
+from threading import Timer
 from gui.timer_entry import TimerEntry
-from datetime import datetime, timedelta
+from datetime import datetime
 from gui.log_view import LogView
 import application
 from util.time_util import convert_time
 import timeframe
 
-class RepeatTimer(threading.Timer):
+
+class RepeatTimer(Timer):
     def run(self):
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
+
 
 class Timer:
     def __init__(self, row):
@@ -36,7 +37,9 @@ class Timer:
     def log(self, context):
         if self.current_time > 0:
             if len(self.timer_entry.note.get()) > 0:
-                application.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')} stopwatch {self.row + 1} with label '{self.timer_entry.note.get()}' {context} at {self.timer_entry.time_text['text']}\n")
+                application.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}"
+                                      f" stopwatch {self.row + 1} with label '{self.timer_entry.note.get()}'"
+                                      f" {context} at {self.timer_entry.time_text['text']}\n")
             else:
                 application.write_log(f"{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}"
                                       f" stopwatch {self.row + 1} {context}"

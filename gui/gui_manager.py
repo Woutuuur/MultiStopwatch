@@ -38,7 +38,7 @@ def create_checkbox(command, checked = False, window = root):
 
 
 def create_separator(orientation, window = root):
-    return ttk.Separator(window, orient=orientation)
+    return ttk.Separator(window, orient = orientation)
 
 
 def close():

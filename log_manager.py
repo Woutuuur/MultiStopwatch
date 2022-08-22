@@ -24,7 +24,7 @@ def open_in_outlook(timeframes):
     dtstamp = __to_ics_time_format(datetime.now())
     dtstart = __to_ics_time_format(min(x.start for x in timeframes))
     dtend = __to_ics_time_format(max(x.end for x in timeframes))
-    mins = int(round(sum(map(Timeframe.getTimeDeltaInMinutes, timeframes))))
+    mins = int(round(sum(map(Timeframe.get_time_delta_in_minutes, timeframes))))
     hrs = mins // 60
     time_s = str(mins)
     if hrs > 0:
@@ -55,11 +55,11 @@ def copy_logs_to_clipboard(timeframes: list[Timeframe]):
 
 
 def timeframes_to_table(timeframes):
-    total = sum(map(Timeframe.getTimeDeltaInSeconds, timeframes))
+    total = sum(map(Timeframe.get_time_delta_in_seconds, timeframes))
 
     text = '''<body><table cellspacing="0" border="1">'''
     text += "<tr><th>Datum</th><th>Start</th><th>Einde</th><th>Duratie</th></tr>"
-    text += ''.join(map(Timeframe.toHTMLRow, timeframes))
+    text += ''.join(map(Timeframe.to_html_row, timeframes))
     text += f'''<tr><td colspan="3"><b>Totaal</b><td>{convert_time(total) }</td></tr>'''
     text += "</table></body>"
     text += "<style>table, th, td{ padding: 10px; border: 1px solid black; border-collapse: collapse; }</style>"

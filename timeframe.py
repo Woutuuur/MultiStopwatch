@@ -7,26 +7,27 @@ class Timeframe:
         self.end = end
         self.customer = customer
 
-    def toHTMLRow(self):
-        return f'<tr><td>{self.getDateString()}</td><td>{self.getStartString()}</td><td>{self.getEndString()}</td><td>{self.getTimeDeltaString()}</td></tr>'
+    def to_html_row(self):
+        return f'<tr><td>{self.get_date_string()}</td><td>{self.get_start_string()}</td>' \
+               f'<td>{self.get_end_string()}</td><td>{self.get_time_delta_string()}</td></tr>'
 
-    def getStartString(self):
+    def get_start_string(self):
         return str(self.start).split('.', 2)[0].split(' ')[1]
     
-    def getEndString(self):
+    def get_end_string(self):
         return str(self.end).split('.', 2)[0].split(' ')[1]
 
-    def getTimeDelta(self):
+    def get_time_delta(self):
         return self.end - self.start
     
-    def getTimeDeltaString(self):
-        return str(self.getTimeDelta()).split('.', 2)[0]
+    def get_time_delta_string(self):
+        return str(self.get_time_delta()).split('.', 2)[0]
 
-    def getDateString(self):
+    def get_date_string(self):
         return str(self.start).split('.', 2)[0].split(' ')[0]
 
-    def getTimeDeltaInMinutes(self):
-        return float(self.getTimeDelta().seconds / 60)
+    def get_time_delta_in_minutes(self):
+        return float(self.get_time_delta().seconds / 60)
 
-    def getTimeDeltaInSeconds(self):
-        return self.getTimeDelta().total_seconds()
+    def get_time_delta_in_seconds(self):
+        return self.get_time_delta().total_seconds()

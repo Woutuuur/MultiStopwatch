@@ -1,10 +1,9 @@
 import pickle
-import gui.gui_manager as GUIManager
+import gui.gui_manager
 from timer import Timer
 from util.time_util import convert_time
 from datetime import datetime
 from config import *
-import application as app
 
 
 def write_log(message):
@@ -13,17 +12,22 @@ def write_log(message):
         f.write(message)
 
 
+def create_user_folder():
+    if not os.path.exists(FULL_PATH):
+        os.makedirs(FULL_PATH)
+
+
 class App:
     def __init__(self):
-        self.__create_user_folder()
+        create_user_folder()
         self.__init_timers()
-        self.add_timer_button = GUIManager.create_button("Add", self.add_timer)
-        self.start_all_button = GUIManager.create_button("Start all", self.start_all_timers)
-        self.stop_all_button = GUIManager.create_button("Pause all",  self.stop_all_timers)
-        self.reset_all_button = GUIManager.create_button("Reset all",  self.reset_all_timers)
-        self.clear_all_button = GUIManager.create_button("Clear notes",  self.clear_all_labels)
-        self.remove_all_button = GUIManager.create_button("Remove all", self.remove_all_timers)
-        self.total_time_label = GUIManager.create_label("0:00:00")
+        self.add_timer_button = gui.gui_manager.create_button("Add", self.add_timer)
+        self.start_all_button = gui.gui_manager.create_button("Start all", self.start_all_timers)
+        self.stop_all_button = gui.gui_manager.create_button("Pause all", self.stop_all_timers)
+        self.reset_all_button = gui.gui_manager.create_button("Reset all", self.reset_all_timers)
+        self.clear_all_button = gui.gui_manager.create_button("Clear notes", self.clear_all_labels)
+        self.remove_all_button = gui.gui_manager.create_button("Remove all", self.remove_all_timers)
+        self.total_time_label = gui.gui_manager.create_label("0:00:00")
 
     def get_amount_of_timers(self):
         return len(self.timers)
@@ -55,7 +59,7 @@ class App:
 
     def on_closing(self):
         self.__write_to_data_file()
-        GUIManager.close()
+        gui.gui_manager.close()
 
     def __reindex_timers(self):
         for i in range(len(self.timers)):
@@ -72,10 +76,6 @@ class App:
         self.reset_all_button.grid(row = offset + 2, column = 3, pady = 5)
         self.clear_all_button.grid(row = offset + 2, column = 0, pady = 5)
         self.remove_all_button.grid(row = offset + 2, column = 4, pady = 5)
-
-    def __create_user_folder(self):
-        if not os.path.exists(FULL_PATH):
-            os.makedirs(FULL_PATH)
 
     def update_total_time(self):
         self.total_time_label['text'] = convert_time(sum(map(Timer.get_current_time, self.timers)))
